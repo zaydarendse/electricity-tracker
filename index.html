@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Electricity Usage Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 24px 0 0 0;
+        }
+
+        .header-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            background: #2563eb;
+            border-radius: 50%;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: #6b7280;
+        }
+
+        .config-banner {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            color: #92400e;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .config-banner.show {
+            display: block;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 6px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .view {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 24px 24px 0 24px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-description {
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .card-content {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .button:hover { background: #1d4ed8; }
+        .button:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .button-secondary { background: #10b981; margin-top: 8px; }
+        .button-secondary:hover { background: #059669; }
+
+        .button-topup { background: #f59e0b; margin-top: 8px; }
+        .button-topup:hover { background: #d97706; }
+
+        .button-bill { background: #6d28d9; }
+        .button-bill:hover { background: #5b21b6; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+        .stat-icon.orange { background: #fed7aa; color: #ea580c; }
+        .stat-icon.yellow { background: #fef3c7; color: #f59e0b; }
+
+        .stat-content h3 { font-size: 0.875rem; color: #6b7280; margin-bottom: 4px; }
+        .stat-content p { font-size: 1.5rem; font-weight: bold; color: #111827; }
+        .stat-content p.small { font-size: 1.125rem; }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .table { width: 100%; border-collapse: collapse; background: white; }
+        .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        .table th { background: #f9fafb; font-weight: 600; color: #374151; white-space: nowrap; }
+        .table td { color: #6b7280; }
+        .table tr:hover { background: #f9fafb; }
+        .text-right { text-align: right; }
+
+        .empty-state { text-align: center; padding: 48px 24px; color: #6b7280; }
+        .empty-icon { width: 64px; height: 64px; margin: 0 auto 16px; opacity: 0.5; }
+
+        .loading { display: none; }
+        .loading.show { display: inline-block; }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+            transform: translateY(-120%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .toast.show { transform: translateY(0); }
+        .toast.error { background: #ef4444; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content.large { max-width: 1000px; }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 { font-size: 1.25rem; font-weight: 600; }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            width: 32px; height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .close-btn:hover { background: #f3f4f6; }
+        .modal-body { padding: 24px; overflow: auto; flex: 1; }
+
+        @media (min-width: 768px) {
+            .header h1 { font-size: 2.5rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .button { width: auto; }
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
+            .toast { left: auto; width: 320px; }
+        }
+
+        @media (min-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .form-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (min-width: 1280px) {
+            .stats-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+
+        @media (max-width: 767px) {
+            .container { padding: 0; }
+            .card-content { padding: 16px; }
+            .table th, .table td { padding: 8px 12px; font-size: 0.875rem; }
+            .modal-content { width: 95%; max-height: 90vh; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+            </div>
+            <h1>Electricity Usage Tracker</h1>
+            <p>Monitor your electricity consumption & costs</p>
+        </div>
+
+        <div class="config-banner" id="configBanner">
+            ⚠️ Set your Apps Script deployment URL in the <code>API_URL</code> constant near the top of the &lt;script&gt; tag before this will work.
+        </div>
+
+        <div class="tab-nav">
+            <button class="tab-btn active" id="tabUsageBtn" onclick="switchView('usage')">⚡ Usage</button>
+            <button class="tab-btn" id="tabBillsBtn" onclick="switchView('bills')">🧾 Bills</button>
+        </div>
+
+        <!-- ================= USAGE VIEW ================= -->
+        <div class="view active" id="usageView">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add New Reading
+                    </div>
+                    <div class="card-description">Enter the current units shown on your electricity meter</div>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label class="label" for="unitsInput">Units Shown on Meter</label>
+                        <input type="number" id="unitsInput" class="input" step="0.01" placeholder="Enter units (e.g., 1234.56)">
+                    </div>
+                    <button class="button" id="addReadingBtn" onclick="addReading()">
+                        <span class="loading" id="loadingText">Adding...</span>
+                        <span id="buttonText">Add Reading</span>
+                    </button>
+                    <button class="button button-topup" onclick="openTopUpModal()">💰 Add Top-Up</button>
+                    <button class="button button-secondary" onclick="openFullDataModal()">📋 View Full Data Sheet</button>
+                </div>
+            </div>
+
+            <div class="stats-grid" id="statsGrid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Latest Usage</h3>
+                        <p id="latestUsage">0 units</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12,6 12,12 16,14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Time Since Last</h3>
+                        <p class="small" id="timeSinceLast">0 days 0 hours</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="2" x2="12" y2="22"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Avg (Last <span id="avgDays">10</span> Days)</h3>
+                        <p id="avgUsage">0 units/day</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Days Remaining</h3>
+                        <p id="daysRemaining">-- days</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon yellow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Cost per Unit</h3>
+                        <p id="costPerUnit">R0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Recent Readings (Latest 10)</div>
+                    <div class="card-description" id="readingsCount">Loading readings...</div>
+                </div>
+                <div class="card-content">
+                    <div id="readingsContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                </svg>
+                            </div>
+                            <p>Loading readings...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= BILLS VIEW ================= -->
+        <div class="view" id="billsView">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🧾 Add Utility Bill</div>
+                    <div class="card-description">Enter the figures straight off your municipal statement</div>
+                </div>
+                <div class="card-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="label" for="billDate">Date</label>
+                            <input type="date" id="billDate" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billInvoiceNumber">Invoice Number</label>
+                            <input type="text" id="billInvoiceNumber" class="input" placeholder="e.g. INV-00231">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billPropertyRates">Property Rates (R)</label>
+                            <input type="number" id="billPropertyRates" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billWater">Water (R)</label>
+                            <input type="number" id="billWater" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billRefuse">Refuse (R)</label>
+                            <input type="number" id="billRefuse" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billSewerage">Sewerage (R)</label>
+                            <input type="number" id="billSewerage" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billSundries">Sundries (R)</label>
+                            <input type="number" id="billSundries" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billVat">VAT (R)</label>
+                            <input type="number" id="billVat" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billTotal">Total (R)</label>
+                            <input type="number" id="billTotal" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billPreviousBalance">Previous Account Balance (R)</label>
+                            <input type="number" id="billPreviousBalance" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billLessPreviousPayments">Less Previous Payments (R)</label>
+                            <input type="number" id="billLessPreviousPayments" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billTotalLiability">Total Liability (R)</label>
+                            <input type="number" id="billTotalLiability" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billActual">Actual (R)</label>
+                            <input type="number" id="billActual" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="label" for="billVariance">Variance (R)</label>
+                            <input type="number" id="billVariance" class="input" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    <button class="button button-bill" onclick="submitBill()" style="margin-top: 8px;">
+                        <span class="loading" id="billLoadingText">Saving...</span>
+                        <span id="billButtonText">Save Bill</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Bill History</div>
+                    <div class="card-description" id="billsCount">Loading bills...</div>
+                </div>
+                <div class="card-content">
+                    <div id="billsContainer">
+                        <div class="empty-state"><p>Loading bills...</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <div id="topUpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💰 Add Electricity Top-Up</h2>
+                <button class="close-btn" onclick="closeTopUpModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="label" for="currentReading">Current Meter Reading</label>
+                    <input type="number" id="currentReading" class="input" step="0.01" placeholder="Enter current reading (e.g., 1234.56)">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="afterReading">Meter Reading After Top-Up</label>
+                    <input type="number" id="afterReading" class="input" step="0.01" placeholder="Enter reading after top-up (e.g., 1334.56)">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="amountPaid">Amount Paid (Rands)</label>
+                    <input type="number" id="amountPaid" class="input" step="0.01" placeholder="Enter amount paid (e.g., 500.00)">
+                </div>
+                <button class="button button-topup" onclick="submitTopUp()">
+                    <span class="loading" id="topUpLoadingText">Processing...</span>
+                    <span id="topUpButtonText">Submit Top-Up</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullDataModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>📊 Complete Data Sheet</h2>
+                <button class="close-btn" onclick="closeFullDataModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="empty-state"><p>Loading data...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // PASTE YOUR APPS SCRIPT DEPLOYMENT URL HERE (ends in /exec)
+        // Deploy > Manage deployments > copy the "Web app" URL
+        // ============================================================
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwgl1uxFsRPDHVoPDfaOuDJKSAW3XVYFlPtJvAGNt1N22H2DHk5tXv0YkPgA1YQqkCaNA/exec';
+
+        let readings = [];
+        let bills = [];
+
+        async function callApi(action, params = {}) {
+            const query = new URLSearchParams({ action, ...params }).toString();
+            const response = await fetch(`${API_URL}?${query}`);
+            if (!response.ok) {
+                throw new Error('Network error: ' + response.status);
+            }
+            return response.json();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!API_URL || API_URL.indexOf('https://script.google.com/macros/s/AKfycbwgl1uxFsRPDHVoPDfaOuDJKSAW3XVYFlPtJvAGNt1N22H2DHk5tXv0YkPgA1YQqkCaNA/exec') === 0) {
+                document.getElementById('configBanner').classList.add('show');
+                return;
+            }
+            loadReadings();
+
+            document.getElementById('unitsInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') addReading();
+            });
+
+            document.getElementById('topUpModal').addEventListener('click', function (e) {
+                if (e.target === this) closeTopUpModal();
+            });
+
+            document.getElementById('fullDataModal').addEventListener('click', function (e) {
+                if (e.target === this) closeFullDataModal();
+            });
+        });
+
+        function switchView(view) {
+            document.getElementById('usageView').classList.toggle('active', view === 'usage');
+            document.getElementById('billsView').classList.toggle('active', view === 'bills');
+            document.getElementById('tabUsageBtn').classList.toggle('active', view === 'usage');
+            document.getElementById('tabBillsBtn').classList.toggle('active', view === 'bills');
+
+            if (view === 'bills' && bills.length === 0) {
+                loadBills();
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${isError ? 'error' : ''} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function addReading() {
+            const unitsInput = document.getElementById('unitsInput');
+            const unitsShown = unitsInput.value.trim();
+
+            if (!unitsShown || isNaN(parseFloat(unitsShown))) {
+                showToast('Please enter a valid number for units shown.', true);
+                return;
+            }
+
+            document.getElementById('loadingText').classList.add('show');
+            document.getElementById('buttonText').style.display = 'none';
+            document.getElementById('addReadingBtn').disabled = true;
+
+            try {
+                const result = await callApi('addReading', { unitsShown: parseFloat(unitsShown) });
+                if (result.success) {
+                    unitsInput.value = '';
+                    showToast('Reading added successfully!');
+                    loadReadings();
+                } else {
+                    showToast('Error: ' + result.message, true);
+                }
+            } catch (error) {
+                showToast('Error adding reading: ' + error.message, true);
+            } finally {
+                document.getElementById('loadingText').classList.remove('show');
+                document.getElementById('buttonText').style.display = 'inline';
+                document.getElementById('addReadingBtn').disabled = false;
+            }
+        }
+
+        function openTopUpModal() {
+            document.getElementById('topUpModal').classList.add('show');
+            document.getElementById('currentReading').value = '';
+            document.getElementById('afterReading').value = '';
+            document.getElementById('amountPaid').value = '';
+        }
+
+        function closeTopUpModal() {
+            document.getElementById('topUpModal').classList.remove('show');
+        }
+
+        async function submitTopUp() {
+            const currentReading = document.getElementById('currentReading').value.trim();
+            const afterReading = document.getElementById('afterReading').value.trim();
+            const amountPaid = document.getElementById('amountPaid').value.trim();
+
+            if (!currentReading || !afterReading || !amountPaid) {
+                showToast('Please fill in all fields', true);
+                return;
+            }
+
+            const current = parseFloat(currentReading);
+            const after = parseFloat(afterReading);
+            const amount = parseFloat(amountPaid);
+
+            if (isNaN(current) || isNaN(after) || isNaN(amount)) {
+                showToast('Please enter valid numbers', true);
+                return;
+            }
+            if (after <= current) {
+                showToast('After reading must be greater than current reading', true);
+                return;
+            }
+            if (amount <= 0) {
+                showToast('Amount paid must be greater than zero', true);
+                return;
+            }
+
+            document.getElementById('topUpLoadingText').classList.add('show');
+            document.getElementById('topUpButtonText').style.display = 'none';
+
+            try {
+                const result = await callApi('addTopUp', {
+                    currentReading: current,
+                    afterReading: after,
+                    amountPaid: amount
+                });
+                if (result.success) {
+                    showToast(`Top-up added! ${result.unitsPurchased} units @ R${result.costPerUnit}/unit`);
+                    closeTopUpModal();
+                    loadReadings();
+                } else {
+                    showToast('Error: ' + result.message, true);
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, true);
+            } finally {
+                document.getElementById('topUpLoadingText').classList.remove('show');
+                document.getElementById('topUpButtonText').style.display = 'inline';
+            }
+        }
+
+        async function loadReadings() {
+            try {
+                const data = await callApi('getAllReadings');
+                readings = data || [];
+                displayReadings();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading readings:', error);
+                showToast('Error loading readings', true);
+            }
+        }
+
+        function displayReadings() {
+            const container = document.getElementById('readingsContainer');
+            const countElement = document.getElementById('readingsCount');
+
+            if (readings.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <p>No readings yet. Add your first reading above!</p>
+                    </div>
+                `;
+                countElement.textContent = 'No readings yet';
+                return;
+            }
+
+            const displayReadings = readings.slice(0, 10);
+            const totalCount = readings.length;
+            countElement.textContent = `Showing ${displayReadings.length} of ${totalCount} reading${totalCount === 1 ? '' : 's'}`;
+
+            const tableHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Timestamp</th>
+                                <th class="text-right">Units Shown</th>
+                                <th class="text-right">Units Used</th>
+                                <th class="text-right">Rand Value</th>
+                                <th>Time Since Last</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${displayReadings.map(reading => {
+                                const isTopUp = reading.entryType === 'topup';
+                                const typeIcon = isTopUp ? '💰' : '⚡';
+                                const typeColor = isTopUp ? '#f59e0b' : '#2563eb';
+                                const rowBg = isTopUp ? 'background: #fffbeb;' : '';
+                                return `
+                                <tr style="${rowBg}">
+                                    <td style="font-size: 1.2rem;" title="${isTopUp ? 'Top-Up' : 'Usage'}">${typeIcon}</td>
+                                    <td style="font-weight: 500; font-size: 0.875rem;">${reading.timestamp}</td>
+                                    <td class="text-right">${reading.unitsShown}</td>
+                                    <td class="text-right" style="font-weight: 500;">${reading.unitsUsed}</td>
+                                    <td class="text-right" style="font-weight: 600; color: ${typeColor};">
+                                        ${reading.randValue !== '--' ? 'R' + reading.randValue : '--'}
+                                    </td>
+                                    <td style="font-size: 0.875rem;">${reading.daysHoursSinceLast}</td>
+                                </tr>
+                            `}).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        async function updateStats() {
+            const statsGrid = document.getElementById('statsGrid');
+
+            if (readings.length === 0) {
+                statsGrid.style.display = 'none';
+                return;
+            }
+
+            statsGrid.style.display = 'grid';
+
+            const latestUsageReading = readings.find(r => r.entryType === 'usage');
+
+            if (latestUsageReading) {
+                const unitsText = latestUsageReading.unitsUsed !== '--' ? latestUsageReading.unitsUsed : '0.00';
+                document.getElementById('latestUsage').textContent = `${unitsText} units`;
+                document.getElementById('timeSinceLast').textContent = latestUsageReading.daysHoursSinceLast;
+            } else {
+                document.getElementById('latestUsage').textContent = '0 units';
+                document.getElementById('timeSinceLast').textContent = '0 days 0 hours';
+            }
+
+            const currentUnits = parseFloat(readings[0].unitsShown);
+
+            try {
+                const result = await callApi('getAverageUsage');
+                const avgPerDay = result.average;
+                document.getElementById('avgUsage').textContent = `${avgPerDay} units/day`;
+                document.getElementById('avgDays').textContent = result.daysCalculated;
+
+                const absAvgPerDay = Math.abs(avgPerDay);
+                if (absAvgPerDay > 0 && !isNaN(currentUnits) && currentUnits > 0) {
+                    const daysRemaining = Math.floor(currentUnits / absAvgPerDay);
+                    document.getElementById('daysRemaining').textContent = `${daysRemaining} days`;
+                } else {
+                    document.getElementById('daysRemaining').textContent = '-- days';
+                }
+            } catch (error) {
+                console.error('Error loading average:', error);
+                document.getElementById('daysRemaining').textContent = 'Error';
+            }
+
+            try {
+                const result = await callApi('getCostPerUnit');
+                document.getElementById('costPerUnit').textContent = `R${result.costPerUnit.toFixed(2)}`;
+            } catch (error) {
+                console.error('Error loading cost per unit:', error);
+            }
+        }
+
+        async function openFullDataModal() {
+            const modal = document.getElementById('fullDataModal');
+            const modalBody = document.getElementById('modalBody');
+
+            modal.classList.add('show');
+            modalBody.innerHTML = '<div class="empty-state"><p>Loading data...</p></div>';
+
+            try {
+                const result = await callApi('getAllSheetData');
+                if (!result.data || result.data.length === 0) {
+                    modalBody.innerHTML = '<div class="empty-state"><p>No data available</p></div>';
+                    return;
+                }
+
+                const tableHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>${result.headers.map(header => `<th>${header}</th>`).join('')}</tr>
+                            </thead>
+                            <tbody>
+                                ${result.data.map(row => `
+                                    <tr>
+                                        ${row.map((cell, idx) => `
+                                            <td ${idx >= 1 && idx <= 3 ? 'class="text-right"' : ''}>${cell}</td>
+                                        `).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                modalBody.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading full data:', error);
+                modalBody.innerHTML = '<div class="empty-state"><p>Error loading data</p></div>';
+            }
+        }
+
+        function closeFullDataModal() {
+            document.getElementById('fullDataModal').classList.remove('show');
+        }
+
+        // ================= BILLS =================
+
+        function collectBillFormData() {
+            return {
+                date: document.getElementById('billDate').value,
+                invoiceNumber: document.getElementById('billInvoiceNumber').value.trim(),
+                propertyRates: document.getElementById('billPropertyRates').value,
+                water: document.getElementById('billWater').value,
+                refuse: document.getElementById('billRefuse').value,
+                sewerage: document.getElementById('billSewerage').value,
+                sundries: document.getElementById('billSundries').value,
+                vat: document.getElementById('billVat').value,
+                total: document.getElementById('billTotal').value,
+                previousBalance: document.getElementById('billPreviousBalance').value,
+                lessPreviousPayments: document.getElementById('billLessPreviousPayments').value,
+                totalLiability: document.getElementById('billTotalLiability').value,
+                actual: document.getElementById('billActual').value,
+                variance: document.getElementById('billVariance').value
+            };
+        }
+
+        function clearBillForm() {
+            ['billDate', 'billInvoiceNumber', 'billPropertyRates', 'billWater', 'billRefuse', 'billSewerage',
+             'billSundries', 'billVat', 'billTotal', 'billPreviousBalance', 'billLessPreviousPayments',
+             'billTotalLiability', 'billActual', 'billVariance'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        }
+
+        async function submitBill() {
+            const billData = collectBillFormData();
+
+            if (!billData.date || !billData.invoiceNumber) {
+                showToast('Please enter at least a date and invoice number', true);
+                return;
+            }
+
+            document.getElementById('billLoadingText').classList.add('show');
+            document.getElementById('billButtonText').style.display = 'none';
+
+            try {
+                const result = await callApi('addUtilityBill', { billData: JSON.stringify(billData) });
+                if (result.success) {
+                    showToast('Utility bill saved!');
+                    clearBillForm();
+                    loadBills();
+                } else {
+                    showToast('Error: ' + result.message, true);
+                }
+            } catch (error) {
+                showToast('Error saving bill: ' + error.message, true);
+            } finally {
+                document.getElementById('billLoadingText').classList.remove('show');
+                document.getElementById('billButtonText').style.display = 'inline';
+            }
+        }
+
+        async function loadBills() {
+            const container = document.getElementById('billsContainer');
+            container.innerHTML = '<div class="empty-state"><p>Loading bills...</p></div>';
+
+            try {
+                const data = await callApi('getUtilityBills');
+                bills = data || [];
+                displayBills();
+            } catch (error) {
+                console.error('Error loading bills:', error);
+                container.innerHTML = '<div class="empty-state"><p>Error loading bills</p></div>';
+            }
+        }
+
+        function displayBills() {
+            const container = document.getElementById('billsContainer');
+            const countElement = document.getElementById('billsCount');
+
+            if (bills.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No bills logged yet. Add your first one above!</p></div>';
+                countElement.textContent = 'No bills yet';
+                return;
+            }
+
+            countElement.textContent = `${bills.length} bill${bills.length === 1 ? '' : 's'} logged`;
+
+            const tableHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice #</th>
+                                <th class="text-right">Total</th>
+                                <th class="text-right">Total Liability</th>
+                                <th class="text-right">Actual</th>
+                                <th class="text-right">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bills.map(bill => `
+                                <tr>
+                                    <td style="font-weight: 500;">${bill.date}</td>
+                                    <td>${bill.invoiceNumber}</td>
+                                    <td class="text-right">${bill.total !== '--' ? 'R' + bill.total : '--'}</td>
+                                    <td class="text-right">${bill.totalLiability !== '--' ? 'R' + bill.totalLiability : '--'}</td>
+                                    <td class="text-right">${bill.actual !== '--' ? 'R' + bill.actual : '--'}</td>
+                                    <td class="text-right">${bill.variance !== '--' ? 'R' + bill.variance : '--'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>
